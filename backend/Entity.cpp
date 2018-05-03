@@ -111,8 +111,8 @@ bool Entity::isType(ents::EntityType type) {
 
 bool Entity::intersects(Entity e) {
 	double distance = pow(e.getX()-x,2) + pow(e.getY()-y,2);
-	distance = sqrt(distance);
-	return distance < getHitSphere() + e.getHitSphere();
+	double testRadius = getHitSphere() + e.getHitSphere(); 
+	return distance < testRadius*testRadius;
 }
 
 bool Entity::intersects(Entity* e) {
