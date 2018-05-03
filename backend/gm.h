@@ -13,7 +13,6 @@ class Entity;
 
 class GameMaster {
 	int score;
-	int time;
 	int zombieCooldown;
 	int zombieTimer;
 	int scoreLandmark;
@@ -35,6 +34,7 @@ class GameMaster {
 		std::vector<Entity*> getEntities();
 		std::vector<Entity*> getEntities(ents::EntityType type);
 		void removeEntity(Entity* e);
+		void addEntity(Entity* e);
 		void addEntity(Entity* e, double x, double y);
 		void addToScore(int i);
 		double getWorldWidth();

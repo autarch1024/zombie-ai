@@ -13,7 +13,7 @@ double Zombie::normalizeAngleDiff(double phi, double theta) {
 	return phi-theta;
 }
 
-Zombie::Zombie() : Entity(){
+Zombie::Zombie(GameMaster* m) : Entity(m){
 	typeID = ents::Zombie;
 	radius = 16;
 	speed = 2;
@@ -21,6 +21,7 @@ Zombie::Zombie() : Entity(){
 }
 
 void Zombie::act() {
+	if (gm == 0 || gm == nullptr) return;
 
 	vector<Entity*> players = (*gm).getEntities(ents::Player);
 	if (!players.empty()) {

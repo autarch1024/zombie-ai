@@ -6,8 +6,10 @@
 #include "entities.h"
 #include <iostream>
 
-Entity::Entity() : x(0), y(0), rotation(0), hp(0) {
-	gm = 0;
+Entity::Entity(GameMaster* m) : x(0), y(0), rotation(0), hp(0) {
+	gm = m;
+	(*gm).addEntity(this, 0, 0);
+
 	typeID = ents::Null;
 	turnSpeed = 0;
 	speed = 0;
@@ -18,7 +20,6 @@ Entity::~Entity() {}
 
 void Entity::damage() {
 	(*getGM()).removeEntity(this);
-	(this)-> ~Entity();
 }
 
 //Pretty self explanatory functions

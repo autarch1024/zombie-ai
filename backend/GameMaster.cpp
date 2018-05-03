@@ -37,7 +37,7 @@ void GameMaster::spawnZombie() {
 	}
 
 	//Spawns the zombie at x,y
-	Zombie* z = new Zombie();
+	Zombie* z = new Zombie(this);
 	addEntity(z,x,y);
 	(*z).setRotation(rot);
 }
@@ -90,22 +90,21 @@ void GameMaster::killEntities() {
 GameMaster::GameMaster(NeuralNet brain) {
 
 	score = 0;
-	time = 0;
 	zombieCooldown = 20;
 	zombieTimer = 15;
 	scoreLandmark = 20;
 
 	objects = *(new vector<Entity*>());
 
-	Entity* p = new Player(brain);
+	Entity* p = new Player(this, brain);
 	(*p).setGM(this);
 	addEntity(p, width/2, height/2);
 }
 
 //Delete all the objects
 GameMaster::~GameMaster() {
-	for (Entity* e : objects) {
-		removeEntity( e );
+	while (!objects.empty()) {
+		removeEntity( objects[0] );
 	}
 }
 
@@ -142,7 +141,7 @@ int GameMaster::run(long int sanityCheck, long int seed) {
 
 		sanityCheck--;
 	}
-
+	cout << "score=" << score << " time=" << sc-sanityCheck << " totalValue=" << (score + 1) * (sc - sanityCheck) << endl;
 	return (score + 1) * (sc - sanityCheck);
 }
 
@@ -165,7 +164,6 @@ vector<Entity*> GameMaster::getEntities(ents::EntityType type) {
 
 //Removes the specified entity from the world
 void GameMaster::removeEntity(Entity* e) {
-	cout << "Removing entity " << e;
 	for (unsigned int i = 0; i < objects.size(); i++) {
 		if (objects[i] == e) {
 
@@ -176,6 +174,11 @@ void GameMaster::removeEntity(Entity* e) {
 		}
 	}
 
+}
+
+//Adds the given entity to the game world at the origin
+void GameMaster::addEntity(Entity* e) {
+	addEntity(e,0,0);
 }
 
 //Adds the given entity to the game world at the given coordinates
@@ -190,9 +193,8 @@ void GameMaster::addEntity(Entity* e, double x, double y) {
 			if (pointer == e) return;
 		}
 
-	pending.push_back(e);
-	(*e).setGM(this);
 	(*e).setLocation(x, y);
+	pending.push_back(e);
 }
 
 //Adds i to the score.

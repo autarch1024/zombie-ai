@@ -58,14 +58,13 @@ vector<double> Player::processNNInput() {
 
 //Interperets the neural networks output
 void Player::processNNOutput(vector<double> output) {
-
 	move(output.at(0), output.at(1));
 	rotate(output.at(2));
 
 	if (output.at(3) > 1) {
 		fire();
 	}
-	cout << endl;
+
 }
 
 //Shoots the gun
@@ -73,14 +72,14 @@ void Player::fire() {
 	if (gunTimer < gunCooldown) return;
 
 	gunTimer = -1;
-	Bullet* b;
+	Bullet* b = new Bullet(gm);
 	(*b).setLocation(getX(), getY());
 	(*b).setRotation(getRotation());
 	(*getGM()).addEntity(b, getX(), getY());
 }
 
 
-Player::Player(NeuralNet nn) : Entity() {
+Player::Player(GameMaster* m, NeuralNet nn) : Entity(m) {
 	brain = nn;
 	typeID = ents::Player;
 	gunTimer = 0;
@@ -90,10 +89,10 @@ Player::Player(NeuralNet nn) : Entity() {
 }
 
 void Player::act() {
+	if (gm == 0 || gm == nullptr) return;
 
 	processNNOutput(brain.getOutput(processNNInput()));
 	gunTimer++;
-
 }
 
 

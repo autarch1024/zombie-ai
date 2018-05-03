@@ -7,6 +7,7 @@ using namespace std;
 
 const int NUM_CHAMPS = 3;
 const int NUM_NETS = 10;
+const int NUM_GENS = 10;
 const double MUTATION_CHANCE = 0.1;
 const double WORLD_HEIGHT = 1000;
 const double WORLD_WIDTH = 1000;
@@ -17,26 +18,51 @@ struct Contestant {
 	long int score;
 };
 
+bool operator>(Contestant c1, Contestant c2) {
+	return c1.score > c2.score;
+}
+
+bool operator<(Contestant c1, Contestant c2) {
+	return c1.score < c2.score;
+}
+
+bool operator==(Contestant c1, Contestant c2) {
+	return c1.score == c2.score;
+}
+
+bool operator>=(Contestant c1, Contestant c2) {
+	return c1.score >= c2.score;
+}
+
+bool operator<=(Contestant c1, Contestant c2) {
+	return c1.score <= c2.score;
+}
+
+
 //Insertion sort the contestants
 vector<Contestant> sortContestants(vector<Contestant> contestants) {
 	vector<Contestant> r;
 
-	if (contestants.size() > 0) r.push_back(contestants[0]);
+	if (contestants.size() > 0) {
+		r.push_back(contestants[0]);
+		contestants.erase(contestants.begin());
+	}
 
-	for (Contestant c : contestants) {
-
+	while (!contestants.empty()) {
 		bool added = false;
-
-		for (vector<Contestant>::iterator i = r.begin(); i != r.end(); i++) {
-
-			if (c.score > (*i).score) {
-				r.insert(i,c);
+		for (unsigned int i = 0; i < r.size(); i++) {
+			if (r[i] < contestants[0]) {
 				added = true;
+				r.insert(r.begin()+i, contestants[0]);
+				contestants.erase(contestants.begin());
+				break;
 			}
-
 		}
 
-		if (!added) r.push_back(c);
+		if (!added) {
+			r.push_back(contestants[0]);
+			contestants.erase(contestants.begin());
+		}
 	}
 
 	return r;
@@ -44,8 +70,6 @@ vector<Contestant> sortContestants(vector<Contestant> contestants) {
 
 vector<NeuralNet> runGeneration(vector<NeuralNet> champs, int sanityCheck) {
 	vector<NeuralNet> nets;
-
-	//cout << "Running gen" << endl;
 
 	//Get all the nets
 	for (unsigned int i = 0; i < champs.size(); i++) {
@@ -58,7 +82,6 @@ vector<NeuralNet> runGeneration(vector<NeuralNet> champs, int sanityCheck) {
 
 		}
 	}
-	//cout << "Champs added" << endl;
 
 	while (nets.size() < NUM_NETS) {
 		NeuralNet nn(champs[0].getLayerSizes());
@@ -66,53 +89,35 @@ vector<NeuralNet> runGeneration(vector<NeuralNet> champs, int sanityCheck) {
 		nets.push_back(nn);
 	}
 
-	//cout << "Random units added" << endl;
-
 	//Run the games
 	long int time = clock();
 	vector<Contestant> challengers;
 
 	for (NeuralNet nn : nets) {
-		//cout << "Getting game ready..." << endl;
 		GameMaster gm(nn);
 
 		Contestant c;
 		c.net = nn;
 		cout << "Running game..." << endl;
 		c.score = gm.run(sanityCheck, time);
-		cout << c.score << endl;
 		challengers.push_back(c);
 	}
-
-	sortContestants(challengers);
+	cout << "All games complete" << endl;
+	challengers = sortContestants(challengers);
+	cout << "Contestants sorted: ";
+	for (Contestant c : challengers) cout << c.score << " ";
+	cout << endl;
 
 	//Return the nets
 	vector<NeuralNet> retNets;
-	for (Contestant c : challengers) retNets.push_back(c.net);
+	for (int i = 0; i < NUM_CHAMPS && i < challengers.size(); i++)
+		retNets.push_back(challengers[i].net);
 
-	//cout << "Gen done" << endl;
 	return retNets;
 
 }
 
 int main() {
-	/*
-	vector<int*> v;
-	for (int i = 0; i < 9; i++) {
-		int var = i;
-		v.push_back(&var);
-	}
-
-	for (int i = 0; i < v.size(); i++) {
-		cout << *(v[i]) << " ";
-	}
-	cout << endl;
-
-	v.erase(v.begin() + 4);
-
-	for (int* i : v) cout << *i << " ";
-	*/
-
 	vector<int> sizes;
 	for (int i = 8; i > 4; i--) sizes.push_back(i);
 
@@ -121,9 +126,10 @@ int main() {
 	nn.randomize();
 	v.push_back(nn);
 
-	long int time = clock();
-	runGeneration(v, 300);
-	cout << clock() - time;
+	for (int i = 1; i <= NUM_GENS; i++) {
+		cout << "Running generation " << i << endl;
+		v = runGeneration(v, 3000);
+	}
 	//*/
 
 }

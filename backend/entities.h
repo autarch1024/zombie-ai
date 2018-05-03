@@ -25,7 +25,7 @@ class Entity {
 		ents::EntityType typeID;
 	public:
 
-		Entity();
+		Entity(GameMaster* m);
 		virtual ~Entity();
 
 		double getX();
@@ -55,7 +55,7 @@ class Zombie : public Entity {
 		static double normalizeAngleDiff(double phi, double theta);
 
 	public:
-		Zombie();
+		Zombie(GameMaster* m);
 		void act();
 };
 
@@ -73,14 +73,14 @@ class Player : public Entity {
 		void fire();
 
 	public:
-		Player(NeuralNet nn);
+		Player(GameMaster* m, NeuralNet nn);
 		void act();
 };
 
 class Bullet : public Entity {
 
 	public:
-		Bullet();
+		Bullet(GameMaster* m);
 		void act();
 };
 
