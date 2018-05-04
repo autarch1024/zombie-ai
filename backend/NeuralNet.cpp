@@ -20,7 +20,8 @@ vector<double> NeuralNet::sigmoid(vector<double> v) {
 	vector<double> r(v.size());
 
 	for (unsigned int i = 0; i < v.size(); i++) {
-		r[i] = v[i] / (1 - abs(v[i]));
+		if (v[i] != 1) r[i] = v[i] / (1 - abs(v[i]));
+		else r[i] = v[i] / (1 - abs(v[i] + 0.000001));
 	}
 
 	return r;

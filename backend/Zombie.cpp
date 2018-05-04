@@ -31,11 +31,11 @@ void Zombie::act() {
 			double theta = atan2(player.getY()-getY(), player.getX()-getX());
 
 			theta = normalizeAngleDiff(theta,getRotation());
+			//cout << theta << endl;
 
 			if (theta != 0 && abs(theta) <= turnSpeed) rotate(theta);
 			else if (theta != 0) rotate(turnSpeed * (theta/abs(theta)));
 		}
-
 		move(speed);
 	}
 

@@ -26,14 +26,18 @@ vector<double> Player::getSensorData(ents::EntityType et) {
 	for (double i = 0; i < 2*M_PI; i += 2*M_PI/(sensorNum)) {
 		double num = 0;
 		for (unsigned int j = 0; j < zombies.size(); j++) {
-			Entity* z = zombies.at(j);
+			Entity* z = zombies[j];
 
 			double distance = pow((*z).getY()-getY(),2) + pow((*z).getX()-getX(),2);
-			distance = sqrt(distance);
+			if (distance <= 1e-5) distance = 0;
+			//distance = sqrt(distance);
 
 			double phi = atan2((*z).getY()-getY(), (*z).getX()-getX());
+			if (distance == 0) phi = i;
+
 			phi = normalizeAngleDiff(phi, i);
-			num += 1.0/(pow(phi,2)*distance);
+			if (distance == 0 || phi == 0) num += 100.0/(pow(phi,3)+0.0001)/(distance+0.0001);
+			else num += 100/pow(phi,3)/distance;
 		}
 		v.push_back(num);
 	}
@@ -58,6 +62,7 @@ vector<double> Player::processNNInput() {
 
 //Interperets the neural networks output
 void Player::processNNOutput(vector<double> output) {
+
 	move(output.at(0), output.at(1));
 	rotate(output.at(2));
 

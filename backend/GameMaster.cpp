@@ -10,6 +10,13 @@
 #include <iostream>
 using std::vector;
 
+double fRand(double fMin, double fMax)
+{
+	double f = (double)rand() / RAND_MAX;
+	return fMin + f * (fMax - fMin);
+}
+
+
 //Spawns a zombie at a random spot on the world's edge
 void GameMaster::spawnZombie() {
 	int side = rand() % 4;
@@ -19,26 +26,30 @@ void GameMaster::spawnZombie() {
 	double rot = 0;
 
 	//Determines which side to spawn the zombie on
-	if (side == 0) {
-		x = 0;
-		y = fmod(rand(), height);
-	} else if (side == 1) {
-		x = width;
-		y = fmod(rand(), height);
-		rot = M_PI;
-	} else if (side == 2) {
-		y = 0;
-		x = fmod(rand(), width);
-		rot = M_PI/2;
-	} else {
-		y = height;
-		x = fmod(rand(), width);
-		rot = -M_PI/2;
+	switch(side) {
+	case 0:
+		x = -width/2;
+		y = fRand(-height/2, height/2);
+		rot = 0;
+		break;
+	case 1:
+		x = width/2;
+		y = fRand(-height/2, height/2);
+		break;
+	case 2:
+		x = fRand(width/2, width/2);
+		y = -height/2;
+		break;
+	case 3:
+		x = fRand(-width/2, width/2);
+		y = height/2;
+		break;
 	}
 
 	//Spawns the zombie at x,y
 	Zombie* z = new Zombie(this);
-	addEntity(z,x,y);
+	addEntity(z);
+	(*z).setLocation(x,y);
 	(*z).setRotation(rot);
 }
 
@@ -91,14 +102,13 @@ GameMaster::GameMaster(NeuralNet brain) {
 
 	score = 0;
 	zombieCooldown = 20;
-	zombieTimer = 15;
+	zombieTimer = 20;
 	scoreLandmark = 20;
 
 	objects = *(new vector<Entity*>());
 
 	Entity* p = new Player(this, brain);
-	(*p).setGM(this);
-	addEntity(p, width/2, height/2);
+	addEntity(p);
 }
 
 //Delete all the objects
@@ -178,23 +188,25 @@ void GameMaster::removeEntity(Entity* e) {
 
 //Adds the given entity to the game world at the origin
 void GameMaster::addEntity(Entity* e) {
-	addEntity(e,0,0);
-}
-
-//Adds the given entity to the game world at the given coordinates
-void GameMaster::addEntity(Entity* e, double x, double y) {
 	for (unsigned int i = 0; i < objects.size(); i++) {
 		Entity* pointer = objects[i];
 		if (pointer == e) return;
 	}
 
 	for (unsigned int i = 0; i < pending.size(); i++) {
-			Entity* pointer = pending.at(i);
-			if (pointer == e) return;
-		}
+		Entity* pointer = pending.at(i);
+		if (pointer == e) return;
+	}
 
-	(*e).setLocation(x, y);
 	pending.push_back(e);
+}
+
+//Adds the given entity to the game world at the given coordinates
+void GameMaster::addEntity(Entity* e, double x, double y) {
+
+	addEntity(e);
+	(*e).setLocation(x, y);
+
 }
 
 //Adds i to the score.

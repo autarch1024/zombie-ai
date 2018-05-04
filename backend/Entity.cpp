@@ -55,8 +55,8 @@ void Entity::move(double mag) {
 //Move in the given direction at (mag%speed)
 void Entity::move(double mag, double theta) {
 	if (mag == 0 || speed == 0) return;
-	if (mag > speed) mag = fmod(mag, speed);
 	if (mag < 0) mag = -mag;
+	if (mag > speed) mag = speed;
 
 	setLocation(getX() + mag * cos(rotation+theta), getY() + mag * sin(rotation+theta));
 }
@@ -66,7 +66,8 @@ void Entity::rotate(double d) {
 
 	if (d == 0 || turnSpeed == 0) return;
 	if (d > 2*M_PI || d < -2*M_PI) d = fmod(d, 2*M_PI);
-	if (d > turnSpeed || d < -turnSpeed) d = fmod(d, turnSpeed);
+	if (d >  turnSpeed) d = turnSpeed;
+	if (d < -turnSpeed) d = -turnSpeed;
 
 	rotation += d;
 	rotation = fmod(rotation, 2*M_PI);
@@ -81,11 +82,11 @@ void Entity::setLocation(double a, double b) {
 	x = a;
 	y = b;
 
-	if (x < 0) x = 0;
-	else if (x > (*gm).getWorldWidth()) x = (*gm).getWorldWidth();
+	if (x < -(*gm).getWorldWidth()/2) x = -(*gm).getWorldWidth()/2;
+	else if (x > (*gm).getWorldWidth()/2) x = (*gm).getWorldWidth()/2;
 
-	if (y < 0) y = 0;
-	else if (y > (*gm).getWorldHeight()) y = (*gm).getWorldHeight();
+	if (y < -(*gm).getWorldHeight()/2) y = -(*gm).getWorldHeight()/2;
+		else if (y > (*gm).getWorldHeight()/2) y = (*gm).getWorldHeight()/2;
 }
 
 //Self explanatory
@@ -111,7 +112,7 @@ bool Entity::isType(ents::EntityType type) {
 
 bool Entity::intersects(Entity e) {
 	double distance = pow(e.getX()-x,2) + pow(e.getY()-y,2);
-	double testRadius = getHitSphere() + e.getHitSphere(); 
+	double testRadius = getHitSphere() + e.getHitSphere();
 	return distance < testRadius*testRadius;
 }
 

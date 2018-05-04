@@ -110,7 +110,7 @@ vector<NeuralNet> runGeneration(vector<NeuralNet> champs, int sanityCheck) {
 
 	//Return the nets
 	vector<NeuralNet> retNets;
-	for (int i = 0; i < NUM_CHAMPS && i < challengers.size(); i++)
+	for (unsigned int i = 0; i < NUM_CHAMPS && i < challengers.size(); i++)
 		retNets.push_back(challengers[i].net);
 
 	return retNets;
