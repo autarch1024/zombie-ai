@@ -102,7 +102,7 @@ GameMaster::GameMaster(NeuralNet brain) {
 
 	score = 0;
 	zombieCooldown = 20;
-	zombieTimer = 20;
+	zombieTimer = zombieCooldown;
 	scoreLandmark = 20;
 
 	objects = *(new vector<Entity*>());
@@ -151,7 +151,7 @@ int GameMaster::run(long int sanityCheck, long int seed) {
 
 		sanityCheck--;
 	}
-	cout << "score=" << score << " time=" << sc-sanityCheck << " totalValue=" << (score + 1) * (sc - sanityCheck) << endl;
+	//cout << "score=" << score << " time=" << sc-sanityCheck << " totalValue=" << (score + 1) * (sc - sanityCheck) << endl;
 	return (score + 1) * (sc - sanityCheck);
 }
 

@@ -37,7 +37,7 @@ vector<double> Player::getSensorData(ents::EntityType et) {
 
 			phi = normalizeAngleDiff(phi, i);
 			if (distance == 0 || phi == 0) num += 100.0/(pow(phi,3)+0.0001)/(distance+0.0001);
-			else num += 100/pow(phi,3)/distance;
+			else num += 1000/pow(phi,3)/distance;
 		}
 		v.push_back(num);
 	}

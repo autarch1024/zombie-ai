@@ -1,17 +1,21 @@
 #include <time.h>
+#include <fstream>
 #include <iostream>
 #include <vector>
 #include "neuralnet.h"
 #include "gm.h"
 using namespace std;
 
-const int NUM_CHAMPS = 3;
-const int NUM_NETS = 10;
-const int NUM_GENS = 10;
-const double MUTATION_CHANCE = 0.1;
+const int NUM_CHAMPS = 3;			//Number of nets that carry on from the previous gen
+const int NUM_NETS = 12;			//Number of nets to test in a generation
+const int NUM_GENS = 1000;			//Number of generations to run
+const int NUM_SEEDS = 10; 			//Number of unique level seeds to be used (<= 0 means infinite)
+const double MUTATION_CHANCE = 0.3; //Chance a given weight in a child net will change
 const double WORLD_HEIGHT = 1000;
 const double WORLD_WIDTH = 1000;
 
+int currentGen = 0;
+ofstream file;
 
 struct Contestant {
 	NeuralNet net;
@@ -72,25 +76,25 @@ vector<NeuralNet> runGeneration(vector<NeuralNet> champs, int sanityCheck) {
 	vector<NeuralNet> nets;
 
 	//Get all the nets
-	for (unsigned int i = 0; i < champs.size(); i++) {
+	for (unsigned int i = 0; i < champs.size() && nets.size() < NUM_NETS; i++) {
 
 		nets.push_back(champs[i]);
 
-		for (unsigned int j = i; j < champs.size(); j++) {
+		for (unsigned int j = i; j < champs.size() && nets.size() < NUM_NETS; j++) {
 
-			nets.push_back(champs[i].getChild(champs[j], MUTATION_CHANCE));
+			nets.push_back(champs[i].getChild(MUTATION_CHANCE));
 
 		}
 	}
 
 	while (nets.size() < NUM_NETS) {
-		NeuralNet nn(champs[0].getLayerSizes());
-		nn.randomize();
+		NeuralNet nn;
 		nets.push_back(nn);
 	}
 
 	//Run the games
 	long int time = clock();
+	if (NUM_SEEDS > 0) time %= NUM_SEEDS;
 	vector<Contestant> challengers;
 
 	for (NeuralNet nn : nets) {
@@ -98,15 +102,23 @@ vector<NeuralNet> runGeneration(vector<NeuralNet> champs, int sanityCheck) {
 
 		Contestant c;
 		c.net = nn;
-		cout << "Running game..." << endl;
+		//cout << "Running game..." << endl;
 		c.score = gm.run(sanityCheck, time);
 		challengers.push_back(c);
 	}
-	cout << "All games complete" << endl;
+	//cout << "All games complete" << endl;
 	challengers = sortContestants(challengers);
-	cout << "Contestants sorted: ";
-	for (Contestant c : challengers) cout << c.score << " ";
+
+	cout << "Top scores: ";
+	for (unsigned int i = 0; i < NUM_CHAMPS && i < challengers.size(); i++)
+		cout << challengers[i].score << " ";
 	cout << endl;
+
+
+	//if (currentGen % 100 == 0 || currentGen == NUM_GENS - 1) {
+		file << currentGen << "," << challengers[0].score << endl;
+		//cout << "Printed score to file" << endl;
+	//}
 
 	//Return the nets
 	vector<NeuralNet> retNets;
@@ -122,14 +134,21 @@ int main() {
 	for (int i = 8; i > 4; i--) sizes.push_back(i);
 
 	vector<NeuralNet> v;
-	NeuralNet nn(sizes);
-	nn.randomize();
+	NeuralNet nn;
 	v.push_back(nn);
 
-	for (int i = 1; i <= NUM_GENS; i++) {
-		cout << "Running generation " << i << endl;
+	file.open("scores4.txt");
+
+	for (currentGen = 0; currentGen <= NUM_GENS; currentGen++) {
+		cout << "Running generation " << currentGen << endl;
 		v = runGeneration(v, 3000);
 	}
+
+	file.close();
+
+	cout << endl;
+	v[0].print();
+	if (!v.empty()) v[0].printToFile("net.ai");
 	//*/
 
 }

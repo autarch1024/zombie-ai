@@ -5,6 +5,8 @@
 #include <vector>
 #include <cmath>
 #include <iostream>
+#include <string>
+#include <fstream>
 #include "matrix.h"
 using namespace std;
 
@@ -111,7 +113,6 @@ void Matrix::print() {
 		cout << endl;
 	}
 }
-
 
 //Dot product of two vectors
 double Matrix::dot(vector<double> v1, vector<double> v2) {
