@@ -2,20 +2,27 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
+#include <string>
+#include <sstream>
+#include <limits>
 #include "neuralnet.h"
 #include "gm.h"
 using namespace std;
 
 const int NUM_CHAMPS = 3;			//Number of nets that carry on from the previous gen
 const int NUM_NETS = 12;			//Number of nets to test in a generation
-const int NUM_GENS = 1000;			//Number of generations to run
+int NUM_GENS = 100;				//Number of generations to run
+int PRINT_CHECKPOINT = 0;
 const int NUM_SEEDS = 10; 			//Number of unique level seeds to be used (<= 0 means infinite)
 const double MUTATION_CHANCE = 0.3; //Chance a given weight in a child net will change
 const double WORLD_HEIGHT = 1000;
 const double WORLD_WIDTH = 1000;
+bool silent = false;
 
 int currentGen = 0;
-ofstream file;
+ofstream scoreFile;
+string gameFile = "";
+string netFile = "";
 
 struct Contestant {
 	NeuralNet net;
@@ -109,16 +116,13 @@ vector<NeuralNet> runGeneration(vector<NeuralNet> champs, int sanityCheck) {
 	//cout << "All games complete" << endl;
 	challengers = sortContestants(challengers);
 
-	cout << "Top scores: ";
-	for (unsigned int i = 0; i < NUM_CHAMPS && i < challengers.size(); i++)
-		cout << challengers[i].score << " ";
-	cout << endl;
+	if (!silent) {
+		cout << "Top scores: ";
+		for (unsigned int i = 0; i < NUM_CHAMPS && i < challengers.size(); i++)
+			cout << challengers[i].score << " ";
+		cout << endl;
+	}
 
-
-	//if (currentGen % 100 == 0 || currentGen == NUM_GENS - 1) {
-		file << currentGen << "," << challengers[0].score << endl;
-		//cout << "Printed score to file" << endl;
-	//}
 
 	//Return the nets
 	vector<NeuralNet> retNets;
@@ -129,7 +133,61 @@ vector<NeuralNet> runGeneration(vector<NeuralNet> champs, int sanityCheck) {
 
 }
 
-int main() {
+void parseTerminalInput(int argc, char *argv[]) {
+
+	try {
+		string s = argv[1];
+		NUM_GENS = stoi(s);
+	} catch (const exception&) {
+		//Prints the help text
+		cout << "Syntax:" << endl;
+		cout << "zombieai [NUM_GENS] : runs the genetic algorithm for [NUM_GENS] generations and outputs the resulting neural network in net.ai" << endl << endl;
+		cout << "Arguments:" << endl;
+		cout << "	help : displays this message" << endl;
+		cout << "	-s : runs the program in silent mode" << endl;
+		cout << "	-w [FILE] : outputs the neural net to [FILE]" << endl;
+		cout << "	-p [FILE]: prints a game with the final neural network to [FILE] (Default gamelog.txt)" << endl;
+		cout << "	-c [NUM]: periodically prints a game every [NUM] generations" << endl;
+
+		exit(0);
+	}
+
+	for (int i = 2; i < argc; i++) {
+
+		string s = argv[i];
+
+		//Runs the program in silent mode
+		if (s == "-s") silent = true;
+
+		//Writes the winning net to the given file
+		else if (s == "-w" && i + 1 < argc) {
+			if (i + 1 < argc && argv[i+1] != "-w" && argv[i+1] != "-c" && argv[i+1] != "-p" && argv[i+1] != "-s") {
+				i++;
+				netFile = argv[i];
+			}
+		}
+		//Prints a game with the winning neural net to
+		else if (s == "-p") {
+			if (i + 1 < argc && argv[i+1] != "-w" && argv[i+1] != "-c" && argv[i+1] != "-p" && argv[i+1] != "-s") {
+				i++;
+				gameFile = (argv[i]);
+			} else {
+				gameFile = ("gamelog.txt");
+			}
+		}
+		//Prints a game periodically
+		else if (s == "-c" && i + 1 < argc) {
+			i++;
+			PRINT_CHECKPOINT = std::stoi(argv[i]);
+		}
+	}
+
+}
+
+int main(int argc, char *argv[]) {
+
+	parseTerminalInput(argc, argv);
+
 	vector<int> sizes;
 	for (int i = 8; i > 4; i--) sizes.push_back(i);
 
@@ -137,18 +195,38 @@ int main() {
 	NeuralNet nn;
 	v.push_back(nn);
 
-	file.open("scores4.txt");
-
 	for (currentGen = 0; currentGen <= NUM_GENS; currentGen++) {
-		cout << "Running generation " << currentGen << endl;
+		if (!silent) cout << "Running generation " << currentGen << endl;
 		v = runGeneration(v, 3000);
+
+		if (PRINT_CHECKPOINT != 0 && currentGen % PRINT_CHECKPOINT == 0) {
+
+			//ofstream file;
+
+			stringstream ss;
+			ss << "gen" << currentGen << ".txt";
+			string fileName;
+			ss >> fileName;
+
+			//file.open(fileName);
+
+			GameMaster gm(v[0]);
+			gm.run(fileName, numeric_limits<int>::max(), clock());
+		}
 	}
 
-	file.close();
+	scoreFile.close();
 
 	cout << endl;
-	v[0].print();
-	if (!v.empty()) v[0].printToFile("net.ai");
+	if (!silent) v[0].print();
+	if (!v.empty() && netFile != "") v[0].printToFile(netFile);
+	else if (!v.empty()) v[0].printToFile("net.ai");
+
+	if (gameFile != "") {
+		if (!silent) cout << "Printing game..." << endl;
+		GameMaster gm(v[0]);
+		gm.run(gameFile, numeric_limits<int>::max(), clock());
+	}
 	//*/
 
 }

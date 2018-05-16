@@ -8,6 +8,7 @@
 #include <string>
 #include <cmath>
 #include <iostream>
+#include <fstream>
 using std::vector;
 
 double fRand(double fMin, double fMax)
@@ -153,6 +154,57 @@ int GameMaster::run(long int sanityCheck, long int seed) {
 	}
 	//cout << "score=" << score << " time=" << sc-sanityCheck << " totalValue=" << (score + 1) * (sc - sanityCheck) << endl;
 	return (score + 1) * (sc - sanityCheck);
+}
+
+//Runs the simulation and prints the game state every click to the given file
+void GameMaster::run(string fileName, long int sanityCheck, long int seed) {
+
+	ofstream file;
+	file.open(fileName);
+
+	zombieCooldown = 45;
+	zombieTimer = 0;
+	scoreLandmark = 10;
+
+	long int sc = sanityCheck;
+	srand(seed);
+
+	while ((sanityCheck > 0 && getEntities(ents::Player).size() > 0) || sanityCheck == sc) {
+
+		//Add any pending objects to be added
+		int numPend = 0;
+		while (!pending.empty()) {
+			objects.push_back(pending.at(pending.size()-1));
+			pending.pop_back();
+			numPend++;
+		}
+
+		//Run each entity's act() function
+		for (unsigned int i = 0; i < objects.size(); i++) {
+			(*objects[i]).act();
+		}
+
+		//If it is time to spawn a zombie, do so!
+		if (zombieTimer >= zombieCooldown) {
+			spawnZombie();
+			zombieTimer = -1;
+		}
+		zombieTimer++;
+
+		//Remove any entities that need to be killed
+		killEntities();
+
+		file << objects.size() << " ";
+		for (Entity* e : objects) {
+			file << (*e).getType() << " ";
+			file << (*e).getX() << " ";
+			file << (*e).getY() << " ";
+			file << (*e).getRotation() << " ";
+		}
+		file << endl;
+
+		sanityCheck--;
+	}
 }
 
 //Gets all objects currently in the world regardless of type as a vector

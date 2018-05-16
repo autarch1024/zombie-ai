@@ -8,7 +8,9 @@
 class Entity;
 #include "neuralnet.h"
 #include "enttypes.h"
+#include <fstream>
 #include <vector>
+#include <string>
 
 
 class GameMaster {
@@ -31,6 +33,7 @@ class GameMaster {
 		~GameMaster();
 
 		int run(long int sanity, long int seed);
+		void run(string s, long int sanity, long int seed);
 		std::vector<Entity*> getEntities();
 		std::vector<Entity*> getEntities(ents::EntityType type);
 		void removeEntity(Entity* e);
